@@ -1,15 +1,24 @@
 use std::sync::Arc;
 
-use super::{Honey, service};
-use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
+use crate::{ApiError, honey::HoneyWithId};
 
-pub async fn get_honey(State(svc): State<Arc<dyn service::Service>>) -> impl IntoResponse {
-    Json(svc.list().await)
+use super::{Honey, service};
+use axum::{Json, extract::State, http::StatusCode};
+use uuid::Uuid;
+
+type ServiceError = crate::service::Error;
+
+pub async fn get_honey(
+    State(svc): State<Arc<dyn service::Service<Error = ServiceError>>>,
+) -> Result<Json<Vec<HoneyWithId>>, ApiError> {
+    let honey_list = svc.list().await?;
+    Ok(Json(honey_list))
 }
+
 pub async fn post_honey(
-    State(svc): State<Arc<dyn service::Service>>,
+    State(svc): State<Arc<dyn service::Service<Error = ServiceError>>>,
     Json(honey): Json<Honey>,
-) -> impl IntoResponse {
-    svc.create(honey).await;
-    StatusCode::CREATED
+) -> Result<(StatusCode, Json<Uuid>), ApiError> {
+    let id = svc.create(honey).await?;
+    Ok((StatusCode::CREATED, Json(id)))
 }
