@@ -24,11 +24,11 @@ impl FromRef<AppState> for ServiceV1 {
 
 #[derive(Clone)]
 pub struct ServiceV1 {
-    repo: Arc<dyn Repo<Error = sqlx::Error>>,
+    repo: Arc<dyn Repo>,
 }
 
 impl ServiceV1 {
-    pub fn new(repo: Arc<dyn Repo<Error = sqlx::Error>>) -> Self {
+    pub fn new(repo: Arc<dyn Repo>) -> Self {
         Self { repo }
     }
 }
@@ -38,9 +38,9 @@ impl Service for ServiceV1 {
     type Error = service::Error;
 
     async fn list(&self) -> Result<Vec<HoneyWithId>, Self::Error> {
-        Ok(self.repo.get_all().await?)
+        Ok(self.repo.list().await?)
     }
     async fn create(&self, honey: Honey) -> Result<Uuid, Self::Error> {
-        Ok(self.repo.insert(honey).await?)
+        Ok(self.repo.create(honey).await?)
     }
 }

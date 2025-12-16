@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use crusader::{Creatable, Listable};
 use sqlx::PgPool;
 use sqlx::types::Uuid;
 
@@ -6,12 +7,13 @@ use crate::honey::HoneyWithId;
 
 use super::Honey;
 
-#[async_trait]
-pub trait Repo: Send + Sync {
-    type Error: std::error::Error + Send + Sync + 'static;
-
-    async fn insert(&self, honey: Honey) -> Result<Uuid, Self::Error>;
-    async fn get_all(&self) -> Result<Vec<HoneyWithId>, Self::Error>;
+pub trait Repo:
+    Creatable<Input = Honey, Output = Uuid, Error = sqlx::Error>
+    + Listable<Output = Vec<HoneyWithId>, Error = sqlx::Error>
+    + Send
+    + Sync
+    + 'static
+{
 }
 
 pub struct PgRepo {
@@ -24,10 +26,15 @@ impl PgRepo {
     }
 }
 
+impl Repo for PgRepo {}
+
 #[async_trait]
-impl Repo for PgRepo {
+impl Creatable for PgRepo {
+    type Input = Honey;
+    type Output = Uuid;
     type Error = sqlx::Error;
-    async fn insert(&self, honey: Honey) -> Result<Uuid, Self::Error> {
+
+    async fn create(&self, honey: Honey) -> Result<Uuid, sqlx::Error> {
         let id = sqlx::query_scalar("INSERT INTO honey(title) VALUES ($1) RETURNING id")
             .bind(honey.title)
             .fetch_one(&self.pool)
@@ -35,7 +42,14 @@ impl Repo for PgRepo {
 
         Ok(id)
     }
-    async fn get_all(&self) -> Result<Vec<HoneyWithId>, Self::Error> {
+}
+
+#[async_trait]
+impl Listable for PgRepo {
+    type Output = Vec<HoneyWithId>;
+    type Error = sqlx::Error;
+
+    async fn list(&self) -> Result<Vec<HoneyWithId>, sqlx::Error> {
         let honey_list = sqlx::query_as("SELECT * FROM honey")
             .fetch_all(&self.pool)
             .await?;
