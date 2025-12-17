@@ -1,9 +1,22 @@
 use std::{env, sync::Arc};
 
 use axum::Router;
-use honzel::{AppState, honey};
+use honzel::{
+    AppState,
+    honey::{self, HoneyApiDoc},
+};
 use sqlx::PgPool;
 use tokio::net::TcpListener;
+use utoipa::OpenApi;
+use utoipa_scalar::{Scalar, Servable};
+
+#[derive(OpenApi)]
+#[openapi(
+    nest(
+        (path = "/honey", api = HoneyApiDoc)
+    )
+)]
+struct ApiDoc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -18,7 +31,9 @@ async fn main() -> anyhow::Result<()> {
 
     let state = AppState { honey_service };
 
-    let router = Router::new().nest("/honey", honey::router(state.clone()));
+    let router = Router::new()
+        .nest("/honey", honey::router(state.clone()))
+        .merge(Scalar::with_url("/scalar", ApiDoc::openapi()));
 
     Ok(axum::serve(listener, router).await?)
 }

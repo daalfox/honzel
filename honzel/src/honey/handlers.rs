@@ -8,6 +8,14 @@ use uuid::Uuid;
 
 type ServiceError = crate::service::Error;
 
+#[utoipa::path(
+    get,
+    path = "",
+    tag = "honey",
+    responses(
+        (status = 200, description = "Honey list", body = Vec<HoneyWithId>)
+    )
+)]
 pub async fn get_honey(
     State(svc): State<Arc<dyn service::Service<Error = ServiceError>>>,
 ) -> Result<Json<Vec<HoneyWithId>>, ApiError> {
@@ -15,6 +23,14 @@ pub async fn get_honey(
     Ok(Json(honey_list))
 }
 
+#[utoipa::path(
+    post,
+    path = "",
+    tag = "honey",
+    responses(
+        (status = 201, description = "Honey created", body = Uuid)
+    )
+)]
 pub async fn post_honey(
     State(svc): State<Arc<dyn service::Service<Error = ServiceError>>>,
     Json(honey): Json<Honey>,
