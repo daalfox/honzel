@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::{OpenApi, ToSchema};
 use uuid::Uuid;
+use validator::Validate;
 
 use crate::{
     AppState,
@@ -17,15 +18,16 @@ mod service;
 pub use repo::PgRepo;
 pub use service::ServiceV1;
 
-#[derive(Serialize, Deserialize, FromRow, ToSchema)]
+#[derive(Serialize, FromRow, ToSchema)]
 pub struct HoneyWithId {
     id: Uuid,
     #[sqlx(flatten)]
     #[serde(flatten)]
     honey: Honey,
 }
-#[derive(Serialize, Deserialize, FromRow, ToSchema)]
+#[derive(Serialize, Deserialize, FromRow, ToSchema, Validate)]
 pub struct Honey {
+    #[validate(length(min = 1, message = "must be at least 1 character long"))]
     title: String,
 }
 

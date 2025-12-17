@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{ApiError, honey::HoneyWithId};
+use crate::{ApiError, extractor::ValidatedJson, honey::HoneyWithId};
 
 use super::{Honey, service};
 use axum::{Json, extract::State, http::StatusCode};
@@ -27,13 +27,15 @@ pub async fn get_honey(
     post,
     path = "",
     tag = "honey",
+    request_body = Honey,
     responses(
-        (status = 201, description = "Honey created", body = Uuid)
+        (status = 201, description = "Honey created", body = Uuid),
     )
 )]
+#[axum::debug_handler]
 pub async fn post_honey(
     State(svc): State<Arc<dyn service::Service<Error = ServiceError>>>,
-    Json(honey): Json<Honey>,
+    ValidatedJson(honey): ValidatedJson<Honey>,
 ) -> Result<(StatusCode, Json<Uuid>), ApiError> {
     let id = svc.create(honey).await?;
     Ok((StatusCode::CREATED, Json(id)))
