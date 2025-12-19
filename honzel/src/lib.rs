@@ -6,11 +6,13 @@ use serde_json::json;
 
 mod extractor;
 pub mod honey;
+pub mod order;
 mod service;
 
 #[derive(Clone)]
 pub struct AppState {
     pub honey_service: Arc<honey::ServiceV1>,
+    pub order_service: Arc<order::ServiceV1>,
 }
 
 pub enum ApiError {

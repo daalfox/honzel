@@ -29,7 +29,7 @@ pub async fn get_honey(
     tag = "honey",
     request_body = Honey,
     responses(
-        (status = 201, description = "Honey created", body = Uuid),
+        (status = 201, description = "Honey created", body = Uuid)
     )
 )]
 #[axum::debug_handler]
